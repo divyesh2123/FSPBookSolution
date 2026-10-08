@@ -1,0 +1,34 @@
+@page "{id:int}"
+@using FSPBook.ViewModel
+@model ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div>
+    @if (Model.Profile != null)
+    {
+        <h2>@Model.Profile.FullName</h2>
+        <div class="text-muted">@Model.Profile.JobTitle</div>
+
+        <hr />
+
+        <h4>Posts</h4>
+        @if (Model.Profile.Posts == null || Model.Profile.Posts.Count == 0)
+        {
+            <p>No posts from this user.</p>
+        }
+        else
+        {
+            foreach (var post in Model.Profile.Posts)
+            {
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">@post.DateTimePosted.ToLocalTime().ToString("g")</h6>
+                        <p class="card-text">@post.Content</p>
+                    </div>
+                </div>
+            }
+        }
+    }
+</div>

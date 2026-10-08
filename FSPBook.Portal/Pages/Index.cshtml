@@ -1,0 +1,59 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <h2>Latest Posts</h2>
+        @if (Model.Posts == null || Model.Posts.Count == 0)
+        {
+            <p>No posts found.</p>
+        }
+        else
+        {
+            foreach (var post in Model.Posts)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title"><a asp-page="/Profile" asp-route-id="@post.AuthorId">@post.AuthorName</a></h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@post.DateTimePosted.ToLocalTime().ToString("g")</h6>
+                        <p class="card-text">@post.Content</p>
+                    </div>
+                </div>
+            }
+
+            <div>
+                <a class="btn btn-link" href="?count=@(Model.Count + 10)">Show more</a>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-4">
+        <h4>Technology News</h4>
+        @if (Model.News == null || Model.News.Count == 0)
+        {
+            <p>No news available. Configure `NewsApiKey` in `appsettings.json` to enable the feed.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled">
+                @foreach (var n in Model.News)
+                {
+                    <li class="mb-2">
+                        @if (!string.IsNullOrEmpty(n.Url))
+                        {
+                            <a href="@n.Url" target="_blank">@n.Title</a>
+                        }
+                        else
+                        {
+                            @n.Title
+                        }
+                        <div class="text-muted small">@n.Source</div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

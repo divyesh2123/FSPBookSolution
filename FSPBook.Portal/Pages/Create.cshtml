@@ -1,0 +1,47 @@
+﻿@page
+@model FSPBook.Pages.CreateModel
+@{
+    ViewData["Title"] = "Create Post";
+}
+
+<div class="text-center">
+    <h1>Create New Post</h1>
+</div>
+
+<form method="post">
+    <div class="form-group">
+        <label>Post on behalf of:</label>
+        <select asp-for="ProfileId" class="d-block w-50">
+            <option selected value="-1">Select</option>
+            @foreach (var profile in Model.Profiles)
+            {
+                <option value="@profile.Id">@profile.FullName</option>
+            }
+        </select>
+        <span asp-validation-for="ProfileId"></span>
+    </div>
+    <div class="form-group">
+        <label for="contentInput">What's on your mind?</label>
+        <textarea class="w-100" asp-for="ContentInput" rows="4" style="resize: none"></textarea>
+        <span asp-validation-for="ContentInput"></span>
+    </div>
+    <div>
+        <button class="btn btn-primary float-right" type="submit">Post</button>
+    </div>
+</form>
+@if (Model.Success)
+{
+    <p id="successMessage">Posted!</p>
+}
+
+@section scripts{
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function (event) {
+            setTimeout(function () {
+                let successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'none';
+            }, 5000);
+        });
+    </script>
+}
