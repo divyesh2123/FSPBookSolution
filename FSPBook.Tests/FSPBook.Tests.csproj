@@ -32,5 +32,6 @@
     <ProjectReference Include="..\FSPBook.Service\FSPBook.Service.csproj" />
     <ProjectReference Include="..\FSPBook.ViewModel\FSPBook.ViewModel.csproj" />
     <ProjectReference Include="..\FSPBook.Portal\FSPBook.Portal.csproj" />
+    <ProjectReference Include="..\FSPBook.OutboundService\FSPBook.OutboundService.csproj" />
   </ItemGroup>
 </Project>

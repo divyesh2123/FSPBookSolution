@@ -1,13 +1,15 @@
-using FSPBook.Service.Interfaces;
+using FSPBook.OutboundService.Interfaces;
 using FSPBook.ViewModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace FSPBook.Service.Implementations;
+namespace FSPBook.OutboundService.Implementations;
 
 public class NewsService : INewsService
 {
+    public const string TopNewsUrlKey = "OutboundServices:NewsApi:TopNewsUrl";
+
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<NewsService> _logger;
@@ -25,13 +27,20 @@ public class NewsService : INewsService
         {
             var apiKey = _configuration["NewsApiKey"];
             var filterCategory = _configuration["filterCategory"];
+            var topNewsUrl = _configuration[TopNewsUrlKey];
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 _logger.LogWarning("NewsApiKey is not configured");
                 return new List<NewsItemViewModel>();
             }
 
-            var url = $"https://api.thenewsapi.com/v1/news/top?api_token={apiKey}&categories={filterCategory}&language=en&limit={limit}";
+            if (string.IsNullOrWhiteSpace(topNewsUrl))
+            {
+                _logger.LogWarning("{Key} is not configured", TopNewsUrlKey);
+                return new List<NewsItemViewModel>();
+            }
+
+            var url = $"{topNewsUrl}?api_token={apiKey}&categories={filterCategory}&language=en&limit={limit}";
             var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)

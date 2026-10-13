@@ -2,6 +2,7 @@ using FSPBook.Data;
 using FSPBook.Utilities;
 using FSPBook.Repositroy.Implementations;
 using FSPBook.Repositroy.Interfaces;
+using FSPBook.OutboundService.Extensions;
 using FSPBook.Service.Implementations;
 using FSPBook.Service.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -22,7 +23,9 @@ builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
-builder.Services.AddHttpClient<INewsService, NewsService>();
+
+// Register outbound (third-party) HTTP clients with Polly resilience
+builder.Services.AddOutboundServices(builder.Configuration);
 
 var app = builder.Build();
 

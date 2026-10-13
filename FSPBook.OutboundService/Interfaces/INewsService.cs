@@ -1,6 +1,6 @@
 using FSPBook.ViewModel;
 
-namespace FSPBook.Service.Interfaces;
+namespace FSPBook.OutboundService.Interfaces;
 
 public interface INewsService
 {

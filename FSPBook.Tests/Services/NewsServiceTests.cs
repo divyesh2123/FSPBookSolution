@@ -1,5 +1,5 @@
 using System.Net;
-using FSPBook.Service.Implementations;
+using FSPBook.OutboundService.Implementations;
 using FSPBook.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -21,12 +21,15 @@ public class NewsServiceTests
 
     private readonly Mock<ILogger<NewsService>> _logger = new();
 
-    private static IConfiguration Config(string? apiKey = "test-key", string? category = "tech") =>
+    private const string TopNewsUrl = "https://api.thenewsapi.com/v1/news/top";
+
+    private static IConfiguration Config(string? apiKey = "test-key", string? category = "tech", string? topNewsUrl = TopNewsUrl) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["NewsApiKey"] = apiKey,
-                ["filterCategory"] = category
+                ["filterCategory"] = category,
+                [NewsService.TopNewsUrlKey] = topNewsUrl
             })
             .Build();
 
@@ -54,6 +57,31 @@ public class NewsServiceTests
         Assert.Empty(result);
         Assert.Empty(handler.Requests);
         VerifyLogged(LogLevel.Warning, Times.Once());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Returns_Empty_And_Skips_Http_When_TopNewsUrl_Missing(string? topNewsUrl)
+    {
+        var handler = FakeHttpMessageHandler.Returning(HttpStatusCode.OK, ValidJson);
+
+        var result = await CreateService(handler, Config(topNewsUrl: topNewsUrl)).GetTechnologyNewsAsync();
+
+        Assert.Empty(result);
+        Assert.Empty(handler.Requests);
+        VerifyLogged(LogLevel.Warning, Times.Once());
+    }
+
+    [Fact]
+    public async Task Uses_TopNewsUrl_From_Configuration()
+    {
+        var handler = FakeHttpMessageHandler.Returning(HttpStatusCode.OK, ValidJson);
+
+        await CreateService(handler, Config(topNewsUrl: "https://news.example.test/v2/top")).GetTechnologyNewsAsync();
+
+        Assert.StartsWith("https://news.example.test/v2/top?api_token=", handler.Requests.Single().RequestUri!.ToString());
     }
 
     [Fact]

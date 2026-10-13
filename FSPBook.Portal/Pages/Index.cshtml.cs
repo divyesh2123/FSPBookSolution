@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using FSPBook.OutboundService.Interfaces;
 using FSPBook.Service.Interfaces;
 using FSPBook.ViewModel;
 using System.Collections.Generic;

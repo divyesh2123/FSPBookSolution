@@ -17,6 +17,7 @@
     <ProjectReference Include="..\FSPBook.Repositroy\FSPBook.Repositroy.csproj" />
     <ProjectReference Include="..\FSPBook.Service\FSPBook.Service.csproj" />
     <ProjectReference Include="..\FSPBook.ViewModel\FSPBook.ViewModel.csproj" />
+    <ProjectReference Include="..\FSPBook.OutboundService\FSPBook.OutboundService.csproj" />
   </ItemGroup>
 
   <ItemGroup>

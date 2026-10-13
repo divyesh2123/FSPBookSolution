@@ -1,4 +1,5 @@
 using FSPBook.Pages;
+using FSPBook.OutboundService.Interfaces;
 using FSPBook.Service.Interfaces;
 using FSPBook.ViewModel;
 using Microsoft.Extensions.Logging.Abstractions;
