@@ -19,13 +19,18 @@ public class PostRepository : BaseRepository<Post>, IPostRepository
             .ToListAsync();
     }
 
-    public async Task<List<Post>> GetPostsOrderedByDateDescendingAsync(int take = 10)
+    public async Task<(List<Post> Posts, int TotalCount)> GetPostsPageAsync(int pageNumber, int pageSize)
     {
-        return await _dbSet
+        var totalCount = await _dbSet.CountAsync();
+
+        var posts = await _dbSet
             .Include(p => p.Author)
             .OrderByDescending(p => p.DateTimePosted)
-            .Take(take)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        return (posts, totalCount);
     }
 
     public async Task<Post?> GetPostWithAuthorAsync(int postId)

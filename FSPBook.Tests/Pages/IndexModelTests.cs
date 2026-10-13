@@ -4,6 +4,7 @@ using FSPBook.Service.Interfaces;
 using FSPBook.ViewModel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using X.PagedList;
 using Xunit;
 
 namespace FSPBook.Tests.Pages;
@@ -16,46 +17,47 @@ public class IndexModelTests
 
     public IndexModelTests()
     {
-        _postService.Setup(s => s.GetRecentPostsAsync(It.IsAny<int>())).ReturnsAsync(new List<PostViewModel>());
+        _postService.Setup(s => s.GetPostsPageAsync(It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(EmptyPage());
         _newsService.Setup(s => s.GetTechnologyNewsAsync(It.IsAny<int>())).ReturnsAsync(new List<NewsItemViewModel>());
         _model = new IndexModel(NullLogger<IndexModel>.Instance, _postService.Object, _newsService.Object);
     }
 
+    private static IPagedList<PostViewModel> EmptyPage() => new StaticPagedList<PostViewModel>(new List<PostViewModel>(), 1, 10, 0);
+
     [Fact]
     public void Defaults_Are_Initialised()
     {
-        Assert.Equal(10, _model.Count);
         Assert.Empty(_model.Posts);
+        Assert.Equal(0, _model.Posts.TotalItemCount);
         Assert.Empty(_model.News);
     }
 
     [Fact]
-    public async Task OnGetAsync_Without_Count_Requests_Ten_Posts()
+    public async Task OnGetAsync_Without_PageNumber_Requests_First_Page()
     {
         await _model.OnGetAsync(null);
 
-        Assert.Equal(10, _model.Count);
-        _postService.Verify(s => s.GetRecentPostsAsync(10), Times.Once);
+        _postService.Verify(s => s.GetPostsPageAsync(1, IndexModel.PageSize), Times.Once);
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(20)]
-    [InlineData(50)]
-    public async Task OnGetAsync_With_Count_Requests_That_Many_Posts(int count)
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(7)]
+    public async Task OnGetAsync_With_PageNumber_Requests_That_Page(int pageNumber)
     {
-        await _model.OnGetAsync(count);
+        await _model.OnGetAsync(pageNumber);
 
-        Assert.Equal(count, _model.Count);
-        _postService.Verify(s => s.GetRecentPostsAsync(count), Times.Once);
+        _postService.Verify(s => s.GetPostsPageAsync(pageNumber, IndexModel.PageSize), Times.Once);
     }
 
     [Fact]
     public async Task OnGetAsync_Populates_Posts_And_News()
     {
-        var posts = new List<PostViewModel> { new() { Id = 1, Content = "Hi", AuthorName = "Jane Doe" } };
+        var posts = new StaticPagedList<PostViewModel>(
+            new List<PostViewModel> { new() { Id = 1, Content = "Hi", AuthorName = "Jane Doe" } }, 1, 10, 1);
         var news = new List<NewsItemViewModel> { new() { Title = "Headline" } };
-        _postService.Setup(s => s.GetRecentPostsAsync(10)).ReturnsAsync(posts);
+        _postService.Setup(s => s.GetPostsPageAsync(1, IndexModel.PageSize)).ReturnsAsync(posts);
         _newsService.Setup(s => s.GetTechnologyNewsAsync(It.IsAny<int>())).ReturnsAsync(news);
 
         await _model.OnGetAsync(null);
@@ -67,7 +69,7 @@ public class IndexModelTests
     [Fact]
     public async Task OnGetAsync_Requests_News_With_Default_Limit()
     {
-        await _model.OnGetAsync(30);
+        await _model.OnGetAsync(3);
 
         _newsService.Verify(s => s.GetTechnologyNewsAsync(5), Times.Once);
     }

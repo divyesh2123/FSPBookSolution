@@ -1,6 +1,7 @@
 using System.Net;
 using FSPBook.OutboundService.Implementations;
 using FSPBook.OutboundService.Interfaces;
+using FSPBook.OutboundService.Mappings;
 using FSPBook.OutboundService.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,8 @@ public static class OutboundServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddOutboundServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddAutoMapper(cfg => cfg.LicenseKey = configuration["AutoMapper:LicenseKey"], typeof(NewsApiProfile));
+
         services.AddHttpClient<INewsService, NewsService>(NewsApiClientName)
             .AddOutboundResilience(NewsApiClientName, configuration);
 

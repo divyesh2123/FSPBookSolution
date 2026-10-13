@@ -96,28 +96,43 @@ public class PostServiceTests
     }
 
     [Fact]
-    public async Task GetRecentPostsAsync_Defaults_Take_To_Ten()
+    public async Task GetPostsPageAsync_Defaults_PageSize_To_Ten()
     {
-        _postRepository.Setup(r => r.GetPostsOrderedByDateDescendingAsync(It.IsAny<int>())).ReturnsAsync(new List<Post>());
+        _postRepository.Setup(r => r.GetPostsPageAsync(It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync((new List<Post>(), 0));
 
-        await _service.GetRecentPostsAsync();
+        await _service.GetPostsPageAsync(1);
 
-        _postRepository.Verify(r => r.GetPostsOrderedByDateDescendingAsync(10), Times.Once);
+        _postRepository.Verify(r => r.GetPostsPageAsync(1, 10), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPostsPageAsync_Builds_Paged_List_From_Repository_Page()
+    {
+        _postRepository.Setup(r => r.GetPostsPageAsync(2, 10))
+            .ReturnsAsync((new List<Post> { PostWithAuthor(5), PostWithAuthor(4) }, 22));
+
+        var result = await _service.GetPostsPageAsync(2, 10);
+
+        Assert.Equal(new[] { 5, 4 }, result.Select(p => p.Id));
+        Assert.Equal(2, result.PageNumber);
+        Assert.Equal(10, result.PageSize);
+        Assert.Equal(22, result.TotalItemCount);
+        Assert.Equal(3, result.PageCount);
+        Assert.True(result.HasPreviousPage);
+        Assert.True(result.HasNextPage);
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(20)]
-    public async Task GetRecentPostsAsync_Passes_Take_Through(int take)
+    [InlineData(0, 10, 1, 10)]
+    [InlineData(-3, 10, 1, 10)]
+    [InlineData(2, 0, 2, 1)]
+    public async Task GetPostsPageAsync_Clamps_Invalid_Arguments(int pageNumber, int pageSize, int expectedPage, int expectedSize)
     {
-        _postRepository.Setup(r => r.GetPostsOrderedByDateDescendingAsync(take))
-            .ReturnsAsync(new List<Post> { PostWithAuthor(1) });
+        _postRepository.Setup(r => r.GetPostsPageAsync(It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync((new List<Post>(), 0));
 
-        var result = await _service.GetRecentPostsAsync(take);
+        await _service.GetPostsPageAsync(pageNumber, pageSize);
 
-        Assert.Single(result);
-        _postRepository.Verify(r => r.GetPostsOrderedByDateDescendingAsync(take), Times.Once);
+        _postRepository.Verify(r => r.GetPostsPageAsync(expectedPage, expectedSize), Times.Once);
     }
 
     [Fact]
@@ -169,7 +184,7 @@ public class PostServiceTests
         var service = new PostService(new PostRepository(context), new ProfileRepository(context));
 
         await service.CreatePostAsync(1, "First!");
-        var post = Assert.Single(await service.GetRecentPostsAsync());
+        var post = Assert.Single(await service.GetPostsPageAsync(1));
 
         Assert.Equal("First!", post.Content);
         Assert.Equal("Jane Doe", post.AuthorName);

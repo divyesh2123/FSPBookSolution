@@ -5,6 +5,7 @@ using FSPBook.Service.Interfaces;
 using FSPBook.ViewModel;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using X.PagedList;
 
 namespace FSPBook.Pages;
 public class IndexModel : PageModel
@@ -20,14 +21,15 @@ public class IndexModel : PageModel
         _newsService = newsService;
     }
 
-    public List<PostViewModel> Posts { get; set; } = new List<PostViewModel>();
-    public int Count { get; set; } = 10;
+    public const int PageSize = 10;
+
+    public IPagedList<PostViewModel> Posts { get; set; } = new StaticPagedList<PostViewModel>(new List<PostViewModel>(), 1, PageSize, 0);
     public List<NewsItemViewModel> News { get; set; } = new List<NewsItemViewModel>();
 
-    public async Task OnGetAsync(int? count)
+    // "page" is reserved by Razor Pages routing, so the query string uses "pageNumber".
+    public async Task OnGetAsync(int? pageNumber)
     {
-        Count = count ?? 10;
-        Posts = await _postService.GetRecentPostsAsync(Count);
+        Posts = await _postService.GetPostsPageAsync(pageNumber ?? 1, PageSize);
         News = await _newsService.GetTechnologyNewsAsync();
     }
 }

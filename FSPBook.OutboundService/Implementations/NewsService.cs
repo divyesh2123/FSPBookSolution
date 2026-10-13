@@ -1,8 +1,10 @@
+using AutoMapper;
 using FSPBook.OutboundService.Interfaces;
+using FSPBook.OutboundService.Models;
 using FSPBook.ViewModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
+using System.Net.Http.Json;
 
 namespace FSPBook.OutboundService.Implementations;
 
@@ -13,12 +15,14 @@ public class NewsService : INewsService
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<NewsService> _logger;
+    private readonly IMapper _mapper;
 
-    public NewsService(HttpClient httpClient, IConfiguration configuration, ILogger<NewsService> logger)
+    public NewsService(HttpClient httpClient, IConfiguration configuration, ILogger<NewsService> logger, IMapper mapper)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
+        _mapper = mapper;
     }
 
     public async Task<List<NewsItemViewModel>> GetTechnologyNewsAsync(int limit = 5)
@@ -49,31 +53,15 @@ public class NewsService : INewsService
                 return new List<NewsItemViewModel>();
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(json);
+            var newsResponse = await response.Content.ReadFromJsonAsync<NewsApiResponse>();
 
-            if (!doc.RootElement.TryGetProperty("data", out var data))
+            if (newsResponse?.Data is null)
             {
                 _logger.LogWarning("No data found in news response");
                 return new List<NewsItemViewModel>();
             }
 
-            var news = new List<NewsItemViewModel>();
-            foreach (var element in data.EnumerateArray())
-            {
-                var title = element.GetProperty("title").GetString() ?? string.Empty;
-                var url_link = element.TryGetProperty("url", out var u) ? u.GetString() : null;
-                var source = element.TryGetProperty("source", out var s) ? s.GetString() : null;
-
-                news.Add(new NewsItemViewModel
-                {
-                    Title = title,
-                    Url = url_link,
-                    Source = source
-                });
-            }
-
-            return news;
+            return _mapper.Map<List<NewsItemViewModel>>(newsResponse.Data);
         }
         catch (Exception ex)
         {

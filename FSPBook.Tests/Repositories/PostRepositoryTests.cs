@@ -52,58 +52,61 @@ public class PostRepositoryTests
     }
 
     [Fact]
-    public async Task GetPostsOrderedByDateDescendingAsync_Defaults_To_Ten_Newest_Posts()
+    public async Task GetPostsPageAsync_Returns_First_Page_Newest_First_With_Total()
     {
         var options = await SeedAsync(15);
 
-        var result = await NewRepository(options).GetPostsOrderedByDateDescendingAsync();
+        var (posts, totalCount) = await NewRepository(options).GetPostsPageAsync(1, 10);
 
-        Assert.Equal(10, result.Count);
-        Assert.Equal("Post 15", result.First().Content);
-        Assert.Equal("Post 6", result.Last().Content);
+        Assert.Equal(15, totalCount);
+        Assert.Equal(Enumerable.Range(6, 10).Reverse(), posts.Select(p => p.Id));
+    }
+
+    [Fact]
+    public async Task GetPostsPageAsync_Skips_Earlier_Pages()
+    {
+        var options = await SeedAsync(15);
+
+        var (posts, totalCount) = await NewRepository(options).GetPostsPageAsync(2, 10);
+
+        Assert.Equal(15, totalCount);
+        Assert.Equal(Enumerable.Range(1, 5).Reverse(), posts.Select(p => p.Id));
     }
 
     [Theory]
-    [InlineData(1, 1)]
-    [InlineData(5, 5)]
-    [InlineData(15, 15)]
-    [InlineData(100, 15)]
-    [InlineData(0, 0)]
-    public async Task GetPostsOrderedByDateDescendingAsync_Respects_Take(int take, int expected)
+    [InlineData(1, 5, 5)]
+    [InlineData(3, 5, 5)]
+    [InlineData(4, 5, 0)]
+    [InlineData(1, 100, 15)]
+    [InlineData(8, 2, 1)]
+    public async Task GetPostsPageAsync_Returns_Expected_Page_Size(int pageNumber, int pageSize, int expected)
     {
         var options = await SeedAsync(15);
 
-        var result = await NewRepository(options).GetPostsOrderedByDateDescendingAsync(take);
+        var (posts, _) = await NewRepository(options).GetPostsPageAsync(pageNumber, pageSize);
 
-        Assert.Equal(expected, result.Count);
+        Assert.Equal(expected, posts.Count);
     }
 
     [Fact]
-    public async Task GetPostsOrderedByDateDescendingAsync_Is_Sorted_Newest_First()
-    {
-        var options = await SeedAsync(8);
-
-        var result = await NewRepository(options).GetPostsOrderedByDateDescendingAsync();
-
-        Assert.Equal(Enumerable.Range(1, 8).Reverse(), result.Select(p => p.Id));
-    }
-
-    [Fact]
-    public async Task GetPostsOrderedByDateDescendingAsync_Includes_Author()
+    public async Task GetPostsPageAsync_Includes_Author()
     {
         var options = await SeedAsync(2);
 
-        var result = await NewRepository(options).GetPostsOrderedByDateDescendingAsync();
+        var (posts, _) = await NewRepository(options).GetPostsPageAsync(1, 10);
 
-        Assert.All(result, p => Assert.Equal("Jane Doe", p.Author?.FullName));
+        Assert.All(posts, p => Assert.Equal("Jane Doe", p.Author?.FullName));
     }
 
     [Fact]
-    public async Task GetPostsOrderedByDateDescendingAsync_Returns_Empty_When_No_Posts()
+    public async Task GetPostsPageAsync_Returns_Empty_When_No_Posts()
     {
         var options = await SeedAsync(0);
 
-        Assert.Empty(await NewRepository(options).GetPostsOrderedByDateDescendingAsync());
+        var (posts, totalCount) = await NewRepository(options).GetPostsPageAsync(1, 10);
+
+        Assert.Empty(posts);
+        Assert.Equal(0, totalCount);
     }
 
     [Fact]

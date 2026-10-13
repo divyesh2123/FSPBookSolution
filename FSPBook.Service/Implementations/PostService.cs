@@ -2,6 +2,7 @@ using FSPBook.Data.Entities;
 using FSPBook.Repositroy.Interfaces;
 using FSPBook.Service.Interfaces;
 using FSPBook.ViewModel;
+using X.PagedList;
 
 namespace FSPBook.Service.Implementations;
 
@@ -34,10 +35,13 @@ public class PostService : IPostService
         return posts.Select(MapToViewModel).ToList();
     }
 
-    public async Task<List<PostViewModel>> GetRecentPostsAsync(int take = 10)
+    public async Task<IPagedList<PostViewModel>> GetPostsPageAsync(int pageNumber, int pageSize = 10)
     {
-        var posts = await _postRepository.GetPostsOrderedByDateDescendingAsync(take);
-        return posts.Select(MapToViewModel).ToList();
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Max(1, pageSize);
+
+        var (posts, totalCount) = await _postRepository.GetPostsPageAsync(pageNumber, pageSize);
+        return new StaticPagedList<PostViewModel>(posts.Select(MapToViewModel), pageNumber, pageSize, totalCount);
     }
 
     public async Task CreatePostAsync(int authorId, string content)

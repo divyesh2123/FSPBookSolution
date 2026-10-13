@@ -1,8 +1,11 @@
 using System.Net;
+using AutoMapper;
 using FSPBook.OutboundService.Implementations;
+using FSPBook.OutboundService.Mappings;
 using FSPBook.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -33,8 +36,11 @@ public class NewsServiceTests
             })
             .Build();
 
+    private static readonly IMapper Mapper =
+        new MapperConfiguration(cfg => cfg.AddProfile<NewsApiProfile>(), NullLoggerFactory.Instance).CreateMapper();
+
     private NewsService CreateService(FakeHttpMessageHandler handler, IConfiguration? config = null) =>
-        new(new HttpClient(handler), config ?? Config(), _logger.Object);
+        new(new HttpClient(handler), config ?? Config(), _logger.Object, Mapper);
 
     private void VerifyLogged(LogLevel level, Times times) =>
         _logger.Verify(l => l.Log(
@@ -159,6 +165,29 @@ public class NewsServiceTests
     }
 
     [Fact]
+    public async Task Missing_Title_Maps_To_Empty_String()
+    {
+        var handler = FakeHttpMessageHandler.Returning(HttpStatusCode.OK, """{ "data": [ { "url": "https://example.com" } ] }""");
+
+        var item = Assert.Single(await CreateService(handler).GetTechnologyNewsAsync());
+
+        Assert.Equal(string.Empty, item.Title);
+        Assert.Equal("https://example.com", item.Url);
+    }
+
+    [Fact]
+    public async Task Ignores_Unknown_Fields_In_Response()
+    {
+        var handler = FakeHttpMessageHandler.Returning(HttpStatusCode.OK,
+            """{ "meta": { "found": 1 }, "data": [ { "uuid": "x", "title": "Story", "image_url": "i.png", "source": "a.com" } ] }""");
+
+        var item = Assert.Single(await CreateService(handler).GetTechnologyNewsAsync());
+
+        Assert.Equal("Story", item.Title);
+        Assert.Equal("a.com", item.Source);
+    }
+
+    [Fact]
     public async Task Empty_Data_Array_Returns_Empty_List()
     {
         var handler = FakeHttpMessageHandler.Returning(HttpStatusCode.OK, """{ "data": [] }""");
@@ -193,7 +222,6 @@ public class NewsServiceTests
     [InlineData("not json")]
     [InlineData("")]
     [InlineData("""{ "data": { "title": "object instead of array" } }""")]
-    [InlineData("""{ "data": [ { "url": "https://example.com" } ] }""")]
     public async Task Returns_Empty_And_Logs_Error_On_Malformed_Response(string body)
     {
         var handler = FakeHttpMessageHandler.Returning(HttpStatusCode.OK, body);
