@@ -27,11 +27,14 @@
 
         }
 
-        @if (Model.Posts.PageCount > 1)
+        @if (Model.Posts.TotalItemCount > 0)
         {
             <nav aria-label="Posts pages">
                 @Html.PagedListPager(Model.Posts, pageNumber => Url.Page("/Index", new { pageNumber }), new PagedListRenderOptions
                 {
+                    Display = PagedListDisplayMode.Always,
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
                     UlElementClasses = new[] { "pagination", "justify-content-center" },
                     LiElementClasses = new[] { "page-item" },
                     PageClasses = new[] { "page-link" },
