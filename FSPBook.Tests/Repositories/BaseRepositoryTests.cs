@@ -57,7 +57,7 @@ public class BaseRepositoryTests
     }
 
     [Fact]
-    public async Task AddAsync_Does_Not_Persist_Until_SaveAsync_Is_Called()
+    public async Task AddAsync_Persists_Immediately()
     {
         var options = TestDbContextFactory.CreateOptions();
         using var context = new Context(options);
@@ -65,17 +65,8 @@ public class BaseRepositoryTests
 
         await repository.AddAsync(TestDbContextFactory.Profile(1));
 
-        using (var verify = new Context(options))
-        {
-            Assert.Empty(verify.Profile);
-        }
-
-        await repository.SaveAsync();
-
-        using (var verify = new Context(options))
-        {
-            Assert.Single(verify.Profile);
-        }
+        using var verify = new Context(options);
+        Assert.Single(verify.Profile);
     }
 
     [Fact]
@@ -156,16 +147,5 @@ public class BaseRepositoryTests
         await repository.DeleteAsync(99);
 
         Assert.Single(context.Profile);
-    }
-
-    [Fact]
-    public async Task SaveAsync_With_No_Changes_Does_Not_Throw()
-    {
-        using var context = TestDbContextFactory.Create();
-        var repository = new BaseRepository<Post>(context);
-
-        var exception = await Record.ExceptionAsync(() => repository.SaveAsync());
-
-        Assert.Null(exception);
     }
 }

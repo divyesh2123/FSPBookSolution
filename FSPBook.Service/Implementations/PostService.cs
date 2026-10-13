@@ -47,16 +47,10 @@ public class PostService : IPostService
         return new StaticPagedList<PostViewModel>(_mapper.Map<List<PostViewModel>>(posts), pageNumber, pageSize, totalCount);
     }
 
-    public async Task CreatePostAsync(int authorId, string content)
+    public async Task CreatePostAsync(CreatePostViewModel model)
     {
-        var post = new Post
-        {
-            AuthorId = authorId,
-            Content = content,
-            DateTimePosted = DateTimeOffset.Now
-        };
+        var post = _mapper.Map<Post>(model);
         await _postRepository.AddAsync(post);
-        await _postRepository.SaveAsync();
     }
 
     public async Task DeletePostAsync(int id)

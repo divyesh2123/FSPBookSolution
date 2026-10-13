@@ -58,7 +58,6 @@ public class ProfileRepositoryTests
         var repository = new ProfileRepository(context);
 
         await repository.AddAsync(TestDbContextFactory.Profile(1, "Jane", "Doe"));
-        await repository.SaveAsync();
 
         Assert.Single(await repository.GetAllAsync());
         Assert.Equal("Jane Doe", (await repository.GetByIdAsync(1))!.FullName);

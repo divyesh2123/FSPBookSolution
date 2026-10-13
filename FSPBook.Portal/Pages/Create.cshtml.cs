@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FSPBook.Data;
 using FSPBook.Data.Entities;
 using FSPBook.Service.Interfaces;
+using FSPBook.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +47,7 @@ public class CreateModel : PageModel
     {
         if (ProfileId != -1)
         {
-            await _postService.CreatePostAsync(ProfileId, ContentInput);
+            await _postService.CreatePostAsync(new CreatePostViewModel { ProfileId = ProfileId, ContentInput = ContentInput });
             Success = true;
             ContentInput = string.Empty;
         }

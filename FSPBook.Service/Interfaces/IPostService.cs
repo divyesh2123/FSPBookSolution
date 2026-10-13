@@ -9,6 +9,6 @@ public interface IPostService
     Task<List<PostViewModel>> GetAllPostsAsync();
     Task<List<PostViewModel>> GetPostsByAuthorIdAsync(int authorId);
     Task<IPagedList<PostViewModel>> GetPostsPageAsync(int pageNumber, int pageSize = 10);
-    Task CreatePostAsync(int authorId, string content);
+    Task CreatePostAsync(CreatePostViewModel model);
     Task DeletePostAsync(int id);
 }

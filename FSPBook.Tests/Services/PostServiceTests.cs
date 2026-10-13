@@ -3,6 +3,7 @@ using FSPBook.Repositroy.Implementations;
 using FSPBook.Repositroy.Interfaces;
 using FSPBook.Service.Implementations;
 using FSPBook.Tests.Helpers;
+using FSPBook.ViewModel;
 using Moq;
 using Xunit;
 
@@ -136,21 +137,16 @@ public class PostServiceTests
     }
 
     [Fact]
-    public async Task CreatePostAsync_Adds_Post_Then_Saves()
+    public async Task CreatePostAsync_Adds_Mapped_Post()
     {
         Post? captured = null;
-        var calls = new List<string>();
         _postRepository.Setup(r => r.AddAsync(It.IsAny<Post>()))
-            .Callback<Post>(p => { captured = p; calls.Add("Add"); })
-            .Returns(Task.CompletedTask);
-        _postRepository.Setup(r => r.SaveAsync())
-            .Callback(() => calls.Add("Save"))
+            .Callback<Post>(p => captured = p)
             .Returns(Task.CompletedTask);
         var before = DateTimeOffset.Now;
 
-        await _service.CreatePostAsync(5, "Hello world");
+        await _service.CreatePostAsync(new CreatePostViewModel { ProfileId = 5, ContentInput = "Hello world" });
 
-        Assert.Equal(new[] { "Add", "Save" }, calls);
         Assert.NotNull(captured);
         Assert.Equal(5, captured!.AuthorId);
         Assert.Equal("Hello world", captured.Content);
@@ -161,10 +157,9 @@ public class PostServiceTests
     [Fact]
     public async Task CreatePostAsync_Propagates_Repository_Failure()
     {
-        _postRepository.Setup(r => r.AddAsync(It.IsAny<Post>())).Returns(Task.CompletedTask);
-        _postRepository.Setup(r => r.SaveAsync()).ThrowsAsync(new InvalidOperationException("db down"));
+        _postRepository.Setup(r => r.AddAsync(It.IsAny<Post>())).ThrowsAsync(new InvalidOperationException("db down"));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreatePostAsync(1, "x"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreatePostAsync(new CreatePostViewModel { ProfileId = 1, ContentInput = "x" }));
     }
 
     [Fact]
@@ -183,7 +178,7 @@ public class PostServiceTests
         await context.SaveChangesAsync();
         var service = new PostService(new PostRepository(context), new ProfileRepository(context), TestMapper.Instance);
 
-        await service.CreatePostAsync(1, "First!");
+        await service.CreatePostAsync(new CreatePostViewModel { ProfileId = 1, ContentInput = "First!" });
         var post = Assert.Single(await service.GetPostsPageAsync(1));
 
         Assert.Equal("First!", post.Content);

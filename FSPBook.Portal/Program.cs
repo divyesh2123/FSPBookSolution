@@ -26,7 +26,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddAutoMapper(typeof(EntityMappingProfile));
 
-// Register outbound (third-party) HTTP clients with Polly resilience
+// Register outbound (third-party) HTTP clients with Polly retry
 builder.Services.AddOutboundServices(builder.Configuration);
 
 var app = builder.Build();

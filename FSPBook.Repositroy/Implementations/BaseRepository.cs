@@ -28,6 +28,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class
     public async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);
+        await SaveAsync();
     }
 
     public async Task UpdateAsync(T entity)
@@ -46,7 +47,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class
         }
     }
 
-    public async Task SaveAsync()
+    protected async Task SaveAsync()
     {
         await _context.SaveChangesAsync();
     }

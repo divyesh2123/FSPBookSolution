@@ -3,6 +3,7 @@ using FSPBook.Data;
 using FSPBook.Pages;
 using FSPBook.Service.Interfaces;
 using FSPBook.Tests.Helpers;
+using FSPBook.ViewModel;
 using Moq;
 using Xunit;
 
@@ -56,7 +57,7 @@ public class CreateModelTests : IDisposable
 
         await _model.OnPostAsync();
 
-        _postService.Verify(s => s.CreatePostAsync(2, "Hello!"), Times.Once);
+        _postService.Verify(s => s.CreatePostAsync(It.Is<CreatePostViewModel>(m => m.ProfileId == 2 && m.ContentInput == "Hello!")), Times.Once);
         Assert.True(_model.Success);
         Assert.Equal(string.Empty, _model.ContentInput);
         Assert.Equal(2, _model.Profiles.Count);
@@ -70,7 +71,7 @@ public class CreateModelTests : IDisposable
 
         await _model.OnPostAsync();
 
-        _postService.Verify(s => s.CreatePostAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        _postService.Verify(s => s.CreatePostAsync(It.IsAny<CreatePostViewModel>()), Times.Never);
         Assert.False(_model.Success);
         Assert.Equal("Hello!", _model.ContentInput);
         Assert.Equal(2, _model.Profiles.Count);
@@ -81,7 +82,7 @@ public class CreateModelTests : IDisposable
     {
         _model.ProfileId = 1;
         _model.ContentInput = "x";
-        _postService.Setup(s => s.CreatePostAsync(It.IsAny<int>(), It.IsAny<string>()))
+        _postService.Setup(s => s.CreatePostAsync(It.IsAny<CreatePostViewModel>()))
             .ThrowsAsync(new InvalidOperationException());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => _model.OnPostAsync());
