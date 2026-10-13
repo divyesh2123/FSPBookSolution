@@ -22,15 +22,7 @@ public static class OutboundServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddOutboundServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var autoMapperLicenseKey = configuration["AutoMapper:LicenseKey"];
-        services.AddAutoMapper(cfg =>
-        {
-            // An empty key is validated (and fails loudly); leaving it unset only logs a warning.
-            if (!string.IsNullOrWhiteSpace(autoMapperLicenseKey))
-            {
-                cfg.LicenseKey = autoMapperLicenseKey;
-            }
-        }, typeof(NewsApiProfile));
+        services.AddAutoMapper(typeof(NewsApiProfile));
 
         services.AddHttpClient<INewsService, NewsService>(NewsApiClientName)
             .AddOutboundResilience(NewsApiClientName, configuration);

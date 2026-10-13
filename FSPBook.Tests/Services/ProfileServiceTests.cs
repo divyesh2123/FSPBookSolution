@@ -1,6 +1,7 @@
 using FSPBook.Data.Entities;
 using FSPBook.Repositroy.Interfaces;
 using FSPBook.Service.Implementations;
+using FSPBook.Tests.Helpers;
 using Moq;
 using Xunit;
 
@@ -13,7 +14,7 @@ public class ProfileServiceTests
 
     public ProfileServiceTests()
     {
-        _service = new ProfileService(_repository.Object);
+        _service = new ProfileService(_repository.Object, TestMapper.Instance);
     }
 
     private static Profile Jane() => new() { Id = 1, FirstName = "Jane", LastName = "Doe", JobTitle = "Developer" };

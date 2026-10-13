@@ -5,7 +5,6 @@ using FSPBook.OutboundService.Mappings;
 using FSPBook.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -37,7 +36,7 @@ public class NewsServiceTests
             .Build();
 
     private static readonly IMapper Mapper =
-        new MapperConfiguration(cfg => cfg.AddProfile<NewsApiProfile>(), NullLoggerFactory.Instance).CreateMapper();
+        new MapperConfiguration(cfg => cfg.AddProfile<NewsApiProfile>()).CreateMapper();
 
     private NewsService CreateService(FakeHttpMessageHandler handler, IConfiguration? config = null) =>
         new(new HttpClient(handler), config ?? Config(), _logger.Object, Mapper);

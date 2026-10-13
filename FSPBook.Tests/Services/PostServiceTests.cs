@@ -18,7 +18,7 @@ public class PostServiceTests
 
     public PostServiceTests()
     {
-        _service = new PostService(_postRepository.Object, _profileRepository.Object);
+        _service = new PostService(_postRepository.Object, _profileRepository.Object, TestMapper.Instance);
     }
 
     private static Post PostWithAuthor(int id, int authorId = 1) => new()
@@ -181,7 +181,7 @@ public class PostServiceTests
         using var context = TestDbContextFactory.Create();
         context.Profile.Add(TestDbContextFactory.Profile(1, "Jane", "Doe"));
         await context.SaveChangesAsync();
-        var service = new PostService(new PostRepository(context), new ProfileRepository(context));
+        var service = new PostService(new PostRepository(context), new ProfileRepository(context), TestMapper.Instance);
 
         await service.CreatePostAsync(1, "First!");
         var post = Assert.Single(await service.GetPostsPageAsync(1));

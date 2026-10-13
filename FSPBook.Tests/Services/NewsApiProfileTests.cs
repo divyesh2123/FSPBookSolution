@@ -2,7 +2,6 @@ using AutoMapper;
 using FSPBook.OutboundService.Mappings;
 using FSPBook.OutboundService.Models;
 using FSPBook.ViewModel;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace FSPBook.Tests.Services;
@@ -10,7 +9,7 @@ namespace FSPBook.Tests.Services;
 public class NewsApiProfileTests
 {
     private readonly MapperConfiguration _configuration =
-        new(cfg => cfg.AddProfile<NewsApiProfile>(), NullLoggerFactory.Instance);
+        new(cfg => cfg.AddProfile<NewsApiProfile>());
 
     [Fact]
     public void Configuration_Is_Valid()
